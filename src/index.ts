@@ -19,17 +19,15 @@ async function main() {
     bearerToken,
   });
 
-  const simpleResult = await simpleAgent.invoke("What is the capital of France?");
+  const simpleResult = await simpleAgent.invoke({ input: "What is the capital of France?" });
   console.log("Response:", simpleResult.output);
 
   console.log("\n=== Example 2: Agent with Weather Tool ===\n");
 
-  const weatherTool = new WeatherTool();
-
   const agentWithTools = await createClaudeAgent({
     endpoint,
     bearerToken,
-    tools: [weatherTool],
+    tools: [WeatherTool],
   });
 
   const weatherResult = await agentWithTools.invoke({
