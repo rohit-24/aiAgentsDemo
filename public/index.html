@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RBAC Rule Generator</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: #00d9ff;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 1.1rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #00d9ff;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #00d9ff;
+      box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.2);
+    }
+
+    textarea::placeholder {
+      color: #666;
+    }
+
+    .options {
+      display: flex;
+      gap: 20px;
+      margin: 16px 0;
+      align-items: center;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #aaa;
+    }
+
+    .checkbox-label input {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #00d9ff 0%, #0099cc 100%);
+      color: #000;
+      border: none;
+      padding: 14px 32px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 217, 255, 0.4);
+    }
+
+    .btn:disabled {
+      background: #444;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .output-section {
+      margin-top: 30px;
+    }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #00d9ff;
+      border: 1px solid #00d9ff;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background: rgba(0, 217, 255, 0.2);
+    }
+
+    .output {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      min-height: 200px;
+      overflow-x: auto;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #00d9ff;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(0, 217, 255, 0.3);
+      border-top-color: #00d9ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error {
+      color: #ff6b6b;
+      background: rgba(255, 107, 107, 0.1);
+      border: 1px solid rgba(255, 107, 107, 0.3);
+      padding: 16px;
+      border-radius: 8px;
+    }
+
+    .success {
+      color: #69db7c;
+    }
+
+    .examples {
+      margin-top: 30px;
+    }
+
+    .examples h3 {
+      color: #00d9ff;
+      margin-bottom: 12px;
+    }
+
+    .example-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .example-item {
+      background: rgba(0, 217, 255, 0.1);
+      border: 1px solid rgba(0, 217, 255, 0.2);
+      padding: 12px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .example-item:hover {
+      background: rgba(0, 217, 255, 0.2);
+      transform: translateX(5px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>RBAC Rule Generator</h1>
+      <p class="subtitle">AI-powered Role-Based Access Control rule creation</p>
+    </header>
+
+    <div class="card">
+      <label for="requirement">Enter your requirement:</label>
+      <textarea
+        id="requirement"
+        placeholder="Example: Create a rule for Singapore PB users to access Money Transfer for customers in their portfolio"
+      ></textarea>
+
+      <div class="options">
+        <label class="checkbox-label">
+          <input type="checkbox" id="useTools" checked>
+          Fetch existing rules for context
+        </label>
+      </div>
+
+      <button class="btn" id="generateBtn" onclick="generateRule()">
+        Generate RBAC Rule
+      </button>
+    </div>
+
+    <div class="output-section">
+      <div class="output-header">
+        <label>Generated Rule:</label>
+        <button class="copy-btn" onclick="copyOutput()">Copy JSON</button>
+      </div>
+      <div class="output">
+        <pre id="output">Your generated RBAC rule will appear here...</pre>
+      </div>
+    </div>
+
+    <div class="examples card">
+      <h3>Example Requirements (click to use):</h3>
+      <div class="example-list">
+        <div class="example-item" onclick="useExample(this)">
+          Create a rule for SG and HK Retail users to access Client Exchange
+        </div>
+        <div class="example-item" onclick="useExample(this)">
+          Create a rule for PB segment RMs to access Money Transfer for their tagged customers
+        </div>
+        <div class="example-item" onclick="useExample(this)">
+          Create a rule for hybrid users in TREASURES and TPC segments with SSR role to access all APIs
+        </div>
+        <div class="example-item" onclick="useExample(this)">
+          Create a rule for India users in RETAIL segment to access basic banking services
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const requirementInput = document.getElementById('requirement');
+    const outputEl = document.getElementById('output');
+    const generateBtn = document.getElementById('generateBtn');
+    const useToolsCheckbox = document.getElementById('useTools');
+
+    async function generateRule() {
+      const requirement = requirementInput.value.trim();
+
+      if (!requirement) {
+        outputEl.innerHTML = '<span class="error">Please enter a requirement</span>';
+        return;
+      }
+
+      generateBtn.disabled = true;
+      outputEl.innerHTML = '<div class="loading"><div class="spinner"></div>Generating RBAC rule...</div>';
+
+      try {
+        const response = await fetch('/api/generate-rule', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            requirement,
+            useTools: useToolsCheckbox.checked,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || data.details || 'Failed to generate rule');
+        }
+
+        const formattedOutput = typeof data.generatedRule === 'object'
+          ? JSON.stringify(data.generatedRule, null, 2)
+          : data.generatedRule;
+
+        outputEl.innerHTML = `<span class="success">${escapeHtml(formattedOutput)}</span>`;
+      } catch (error) {
+        outputEl.innerHTML = `<span class="error">Error: ${escapeHtml(error.message)}</span>`;
+      } finally {
+        generateBtn.disabled = false;
+      }
+    }
+
+    function useExample(element) {
+      requirementInput.value = element.textContent.trim();
+      requirementInput.focus();
+    }
+
+    function copyOutput() {
+      const text = outputEl.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const copyBtn = document.querySelector('.copy-btn');
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+        }, 2000);
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Allow Ctrl+Enter to submit
+    requirementInput.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        generateRule();
+      }
+    });
+  </script>
+</body>
+</html>

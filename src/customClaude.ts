@@ -184,7 +184,7 @@ export class CustomClaudeLLM extends BaseChatModel {
       throw new Error(`API request failed: ${response.status} - ${errorText}`);
     }
 
-    const data: ClaudeResponse = await response.json();
+    const data = await response.json() as ClaudeResponse;
 
     // Process response content
     let textContent = "";

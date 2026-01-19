@@ -1,4 +1,3 @@
-import { StructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 
 // Hardcoded weather data for demo purposes
@@ -12,31 +11,34 @@ const weatherData: Record<string, { temperature: number; condition: string; humi
   "singapore": { temperature: 86, condition: "Thunderstorms", humidity: 90 },
 };
 
-export class WeatherTool extends StructuredTool {
-  name = "get_weather";
-  description = "Get the current weather for a specified city. Returns temperature in Fahrenheit, weather condition, and humidity percentage.";
+const weatherSchema = z.object({
+  city: z.string().describe("The name of the city to get weather for"),
+});
 
-  schema = z.object({
-    city: z.string().describe("The name of the city to get weather for"),
-  });
+async function getWeatherFunc(input: z.infer<typeof weatherSchema>): Promise<string> {
+  const normalizedCity = input.city.toLowerCase().trim();
+  const weather = weatherData[normalizedCity];
 
-  async _call({ city }: { city: string }): Promise<string> {
-    const normalizedCity = city.toLowerCase().trim();
-    const weather = weatherData[normalizedCity];
-
-    if (weather) {
-      return JSON.stringify({
-        city: city,
-        temperature: `${weather.temperature}°F`,
-        condition: weather.condition,
-        humidity: `${weather.humidity}%`,
-      });
-    }
-
+  if (weather) {
     return JSON.stringify({
-      city: city,
-      error: "Weather data not available for this city",
-      available_cities: Object.keys(weatherData),
+      city: input.city,
+      temperature: `${weather.temperature}°F`,
+      condition: weather.condition,
+      humidity: `${weather.humidity}%`,
     });
   }
+
+  return JSON.stringify({
+    city: input.city,
+    error: "Weather data not available for this city",
+    available_cities: Object.keys(weatherData),
+  });
 }
+
+export const WeatherTool = {
+  name: "get_weather",
+  description: "Get the current weather for a specified city. Returns temperature in Fahrenheit, weather condition, and humidity percentage.",
+  schema: weatherSchema,
+  invoke: getWeatherFunc,
+  call: getWeatherFunc,
+};

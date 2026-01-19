@@ -1,18 +1,22 @@
 import { AgentExecutor, createToolCallingAgent } from "langchain/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { StructuredToolInterface } from "@langchain/core/tools";
 import { HumanMessage } from "@langchain/core/messages";
 import { CustomClaudeLLM } from "./customClaude";
 
 interface AgentConfig {
   endpoint: string;
   bearerToken: string;
-  tools?: StructuredToolInterface[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tools?: any[];
   maxTokens?: number;
   temperature?: number;
 }
 
-export async function createClaudeAgent(config: AgentConfig) {
+interface AgentResult {
+  invoke: (params: { input: string }) => Promise<{ output: unknown }>;
+}
+
+export async function createClaudeAgent(config: AgentConfig): Promise<AgentResult> {
   const llm = new CustomClaudeLLM({
     endpoint: config.endpoint,
     bearerToken: config.bearerToken,
@@ -23,8 +27,8 @@ export async function createClaudeAgent(config: AgentConfig) {
   // If no tools provided, return a simple invoke function
   if (!config.tools || config.tools.length === 0) {
     return {
-      invoke: async (input: string) => {
-        const result = await llm.invoke([new HumanMessage(input)]);
+      invoke: async (params: { input: string }) => {
+        const result = await llm.invoke([new HumanMessage(params.input)]);
         return {
           output: result.content,
         };
@@ -52,5 +56,10 @@ export async function createClaudeAgent(config: AgentConfig) {
     verbose: true,
   });
 
-  return agentExecutor;
+  return {
+    invoke: async (params: { input: string }) => {
+      const result = await agentExecutor.invoke(params);
+      return { output: result.output };
+    },
+  };
 }
